@@ -1,4 +1,4 @@
-from waFuCo2 import WaFuCo
+from waFuCo import WaFuCo
 import time
 
 # keep the world 2d array as 3d, so that each tile can also store additional information

@@ -4,190 +4,122 @@ from tilesheet import Tilesheet
 import random
 
 class WaFuCo:
-    def __init__ (self):
+    def __init__ (self, tilesWidth = 48, tilesHeight = 64, cellWidth = 6, cellHeight = 6, doGrassPreference = False):
+    
+        # move values from initialization here
+        self.tilesWidth = tilesWidth
+        self.tilesHeight = tilesHeight
+        self.cellWidth = cellWidth
+        self.cellHeight = cellHeight
+        self.doGrassPreference = doGrassPreference
+
+        # used to know when to stop
+        self.tilesRemaining = tilesWidth*tilesHeight
+
+        # initialize pygame
         pygame.init()
-
-        #self.screen = pygame.display.set_mode([tilesWidth*cellWidth,tilesHeight*cellHeight])
-        self.screen = pygame.display.set_mode((48*6, 64*6))
+        self.screen = pygame.display.set_mode((tilesWidth*cellWidth, tilesHeight*cellHeight))
         self.clock = pygame.time.Clock()
-
         self.bg_color = pygame.Color('black')
 
-        self.tiles =  Tilesheet('tiles.png', 6, 6, 1, 5)
-        self.tileMap = [[-1 for i in range(64)] for j in range(48)]
-        
-        self.possibilitiesMap = [[[0, 1, 2] for i in range(64)] for j in range(48)]
+        # use tile sheet
+        self.tiles =  Tilesheet('tiles.png', cellWidth, cellHeight, 1, 5)
 
-    def oceanBorder(self, margin, tilesWidth, tilesHeight):
-        
-        # top line
-        for i in range(margin):
-            for x in range(tilesWidth):
-                self.tileMap[x][i] = 0
+        self.tileMap = [[[0, 1, 2] for i in range(tilesWidth)] for j in range(tilesHeight)]
 
-        #left line
-        for y in range(tilesHeight):
-            for i in range(margin):
-                self.tileMap[i][y] = 0
+    def oceanBorder(self): # creates border of ocean
+        for x in range(self.tilesWidth): # top
+            self.tileMap[0][x] = [0]
 
-        #bot line
-        for i in range(margin):
-            for x in range(tilesWidth):
-                self.tileMap[x][63-i] = 0
+        for y in range(self.tilesHeight): # left
+            self.tileMap[y][0] = [0]
 
-        #right line
-        for y in range(tilesHeight):
-            for i in range(margin):
-                self.tileMap[47-i][y] = 0
+        for x in range(self.tilesWidth): # bottom
+            self.tileMap[self.tilesHeight-1][x] = [0]
+
+        for y in range(self.tilesHeight): # right
+            self.tileMap[y][self.tilesWidth-1] = [0]
+
+    def sillyTestRing(self, distance = 2): # just for debug!! to test if sand spawns in
+        for y in range(distance, self.tilesHeight-distance):
+            for x in range(distance, self.tilesWidth-distance):
+                self.tileMap[y][x] = [1]
 
     def prunePossibilities(self):
-        for y in range(1, 63): # a lot of hardcoded values here
-            for x in range(1, 47):
-                    if self.tileMap[x-1][y] == 0 or self.tileMap[x][y+1] == 0 or self.tileMap[x][y-1] == 0 or self.tileMap[x+1][y] == 0:
-                        if 1 in self.possibilitiesMap[x][y]: # remove the grass posibility
-                            self.possibilitiesMap[x][y].remove(1)
-                    if self.tileMap[x-1][y] == 1 or self.tileMap[x][y+1] == 1 or self.tileMap[x][y-1] == 1 or self.tileMap[x+1][y] == 1:
-                        if 0 in self.possibilitiesMap[x][y]:
-                            self.possibilitiesMap[x][y].remove(0)
+        for y in range(1, self.tilesHeight-1): # just ignoring margin stuff for now
+            for x in range(1, self.tilesWidth-1):
+
+                if len(self.tileMap[y][x])!= 1:
+                    # ocean, remove grass
+                    if self.tileMap[y][x-1] == [0] or self.tileMap[y+1][x] == [0] or self.tileMap[y-1][x] == [0] or self.tileMap[y][x+1] == [0]:
+                        if 1 in self.tileMap[y][x]: # remove the grass posibility
+                            self.tileMap[y][x].remove(1)
+
+                    # grass, remove ocean
+                    if self.tileMap[y][x-1] == [1] or self.tileMap[y+1][x] == [1] or self.tileMap[y-1][x] == [1] or self.tileMap[y][x+1] == [1]:
+                        if 0 in self.tileMap[y][x]: # remove the ocean posibility
+                            self.tileMap[y][x].remove(0)
+
+    def randomEligibleTile(self): # the lowest possibility somehow becomes 2 when it isnt?? the black spaces are places where it is 3 but the program ignores bc its looking for 2s
+        eligible = [] # eligible tiles
+        lowestPoss = 3 
+
+        for y in range(self.tilesHeight):
+            for x in range(self.tilesWidth):
+                if len(self.tileMap[y][x]) > 1 and len(self.tileMap[y][x])<lowestPoss: # ignores placed ones, tiles with only one poss are functionally placed
+                    lowestPoss = len(self.tileMap[y][x])
+
+        for y in range(self.tilesHeight):
+            for x in range(self.tilesWidth):
+                if len(self.tileMap[y][x]) == lowestPoss:
+                    eligible.insert(0, (x, y)) # insert coordinates into pool to choose from
+
+        if lowestPoss > 1 and len(eligible)>0:
+            # make the choice
+            (xi, yi) = eligible[random.randint(0, len(eligible)-1)] # chooses coordinates
+
+            if self.doGrassPreference and 1 in self.tileMap[yi][xi] == True:
+                self.tileMap[yi][xi].insert(0, 1)
+
+            self.tileMap[yi][xi] = [self.tileMap[yi][xi][random.randint(0,len(self.tileMap[yi][xi])-1)]]
 
 
-    def collapse(self): # must make it do the random thing
+    def printTileMap(self):
+        print()
+        for row in self.tileMap:
+            print(row)
+            print()
 
-        smallestPossib = 3
-        eligible = []
+    def processVisuals(self):
+        for row in range(self.tilesWidth): # i def need to fix the row and col stuff later
+            for col in range(self.tilesHeight):
+                if len(self.tileMap[col][row]) == 1:
+                    self.placeTile(row, col, self.tileMap[col][row][0])
+                else:
+                    self.placeTile(row, col, -1)
+        pygame.display.flip()
 
-        for y in range(1, 63): # a lot of hardcoded values here
-            for x in range(1, 47):
-                if len(self.possibilitiesMap[x][y]) < smallestPossib:
-                    smallestPossib = len(self.possibilitiesMap[x][y])
+    def countPlacedTiles(self): # used to know when to terminate
+        count = self.tilesHeight*self.tilesWidth
+        for y in range(self.tilesHeight):
+            for x in range(self.tilesWidth):
+                if len(self.tileMap[y][x]) == 1:
+                    count-=1
 
-        if smallestPossib == 1:
-            for y in range(1, 63): # a lot of hardcoded values here
-                for x in range(1, 47):
-                    if len(self.possibilitiesMap[x][y]) == 1:
-                        self.tileMap[x][y] = self.possibilitiesMap[x][y][0]
+        return count
+
+    def placeTile(self, x, y, tile):
+        if tile==0: # ocean
+            self.screen.blit(self.tiles.get_tile(0,0), (x*self.cellWidth, y*self.cellHeight))
+        elif tile==1: # grass
+            self.screen.blit(self.tiles.get_tile(1,0), (x*self.cellWidth, y*self.cellHeight))
+        elif tile==2: # sand
+            self.screen.blit(self.tiles.get_tile(2,0), (x*self.cellWidth, y*self.cellHeight))
         else:
-            for y in range(1, 63): # a lot of hardcoded values here
-                for x in range(1, 47):
-                    if len(self.possibilitiesMap[x][y]) == smallestPossib and self.tileMap[x][y] == -1: # do not replace existing tiles
-                        eligible.insert(0, (x, y))
-
-            if len(eligible)>1: # 
-                (i, j) = eligible[random.randint(0, len(eligible)-1)]
-            else:
-                (i, j) = (0,0)
-
-            self.tileMap[i][j] = self.possibilitiesMap[i][j][random.randint(0, len(self.possibilitiesMap[i][j])-1)]
-                    # wai whwere do x and y come from
-
+            self.screen.blit(self.tiles.get_tile(4,0), (x*self.cellWidth, y*self.cellHeight))
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-    def vomit(self): #randomize
-        for y in range(64): # has to be better way of writing this
-            for x in range(48):
-                self.tileMap[x][y] = random.randint(0, 2) # ignore forest
-            
-    def update(self):
-        pass
-
-    def draw(self):
-        self.screen.fill(self.bg_color)
-        for y in range(64):
-            for x in range(48):
-                tileStatus = self.tileMap[x][y]
-                if tileStatus == 0:
-                    self.screen.blit(self.tiles.get_tile(0,0), (x*6, y*6))
-                elif tileStatus == 1:
-                    self.screen.blit(self.tiles.get_tile(1,0), (x*6, y*6)) # ignore forest for now
-                elif tileStatus == 2:
-                    self.screen.blit(self.tiles.get_tile(2,0), (x*6, y*6))
-                elif tileStatus == -1:
-                    self.screen.blit(self.tiles.get_tile(4,0), (x*6, y*6))
-        pygame.display.flip()
-
-
-
-    
-
-# file = 'tiles.png'
-# sprites = pygame.image.load(file)
-
-# tilesWidth = 255
-# tilesHeight = 130
-
-# tileHeightPixels = 5
-# tileWidthPixels = 5
-
-# screen = pygame.display
-
-# terrainDict = {
-#     -1: "unknown",
-#     0 : "water",
-#     1 : "grass",
-#     2 : "beach",
-#     3 : "forest"
-# }
-
-# tileMap = [[0]*int(tilesWidth/tileHeightPixels)]*int(tilesHeight/tileHeightPixels)
-
-# class Cell: # each section on the screen
-    
-#     def __init__(self, coords:tuple):
-#         x, y = self.coords
-
-#     def checkOptions():
-#         pass
-
-# class Tile: # the things from the tilemap
-
-#     def __init__(self, edgeBiomes, index):
-#         self.north = edgeBiomes[0]
-#         self.east = edgeBiomes[1]
-#         self.south = edgeBiomes[2]
-#         self.west = edgeBiomes[3]
-#         self.index = index
-
-#         self.possibilities = len(terrainDict) - 1
-#         self.collapsed = False # essentially if possibilities equals 1
-
-#     def checkStatus():
-#         pass
-        
-
-# def printBiomes(tile:Tile, terDict:dict): # for debugging
-#     """
-#     Prints the biomes at the North, East, South, and West edges of a tile
-#     """
-#     print(f"North : {terDict[tile.north]}")
-#     print(f"East  : {terDict[tile.east]}")
-#     print(f"South : {terDict[tile.south]}")
-#     print(f"West  : {terDict[tile.west]}")
-
-# # class displayThing:
-# #     def __init__(self, tilesWidth, tilesHeight):
-# #         pygame.init()
-# #         self.tilesWidth = tilesWidth
-# #         self.tilesHeight = tilesHeight
-
-# #         self.screen = pygame.display.set_mode([tilesWidth,tilesHeight])
-
-# waterTile = Tile([0, 0, 0, 0], 0)
-# grassTile = Tile([1, 1, 1, 1], 1)
-# beachTile = Tile([2, 2, 2, 2], 2)
-# forestTile = Tile([3, 3, 3, 3], 3)
-
-# # printBiomes(grassTile, terrainDict)
-
-
-# rect = sprites.get_rect()
-
-
-# print(sprites)
-
-# screen.blit(sprites, rect)
-# pygame.display.update()
