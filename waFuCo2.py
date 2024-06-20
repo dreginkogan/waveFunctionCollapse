@@ -4,13 +4,14 @@ from tilesheet import Tilesheet
 import random
 
 class WaFuCo:
-    def __init__ (self, tilesWidth = 48, tilesHeight = 64, cellWidth = 6, cellHeight = 6):
+    def __init__ (self, tilesWidth = 48, tilesHeight = 64, cellWidth = 6, cellHeight = 6, doGrassPreference = False):
     
         # move values from initialization here
         self.tilesWidth = tilesWidth
         self.tilesHeight = tilesHeight
         self.cellWidth = cellWidth
         self.cellHeight = cellHeight
+        self.doGrassPreference = doGrassPreference
 
         # used to know when to stop
         self.tilesRemaining = tilesWidth*tilesHeight
@@ -77,7 +78,11 @@ class WaFuCo:
             # make the choice
             (xi, yi) = eligible[random.randint(0, len(eligible)-1)] # chooses coordinates
 
+            if self.doGrassPreference and 1 in self.tileMap[yi][xi] == True:
+                self.tileMap[yi][xi].insert(0, 1)
+
             self.tileMap[yi][xi] = [self.tileMap[yi][xi][random.randint(0,len(self.tileMap[yi][xi])-1)]]
+
 
     def printTileMap(self):
         print()

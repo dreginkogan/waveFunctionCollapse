@@ -1,11 +1,13 @@
 from waFuCo2 import WaFuCo
 import time
 
+# keep the world 2d array as 3d, so that each tile can also store additional information
+
 if __name__ == '__main__':
-    waFuCo = WaFuCo(64, 96, 6 ,6)
+    waFuCo = WaFuCo(128, 48, 6 ,6, True)
 
     waFuCo.oceanBorder()
-    # waFuCo.sillyTestRing(16)
+    # waFuCo.sillyTestRing(24)
     # waFuCo.prunePossibilities()
     # waFuCo.printTileMap()
     # waFuCo.randomEligibleTile()
@@ -20,6 +22,5 @@ if __name__ == '__main__':
             waFuCo.prunePossibilities()
             waFuCo.randomEligibleTile()
             waFuCo.processVisuals()
-        else:
-            print("doney with the funny")
+
 
