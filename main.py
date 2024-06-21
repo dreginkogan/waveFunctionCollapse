@@ -9,10 +9,10 @@ import time
 # 3 territory???
 
 if __name__ == '__main__':
-    waFuCo = WaFuCo(60, 60, 6 ,6, True)
+    waFuCo = WaFuCo(48, 48, 6 ,6, True)
 
     waFuCo.oceanBorder()
-    # waFuCo.grassVomit(5, 5)
+    waFuCo.grassVomit(3, 5)
 
 
     numClean = 8
