@@ -2,6 +2,7 @@ import pygame
 import sys
 from tilesheet import Tilesheet
 import random
+import time
 
 class WaFuCo:
     def __init__ (self, tilesWidth = 48, tilesHeight = 64, cellWidth = 6, cellHeight = 6, doGrassPreference = False):
@@ -23,9 +24,144 @@ class WaFuCo:
         self.bg_color = pygame.Color('black')
 
         # use tile sheet
-        self.tiles =  Tilesheet('tiles.png', cellWidth, cellHeight, 1, 5)
+        self.tiles =  Tilesheet('tiles.png', cellWidth, cellHeight, 2, 5)
 
         self.tileMap = [[[0, 1, 2] for i in range(tilesWidth)] for j in range(tilesHeight)]
+
+    def spawnForestsInst(self, treeCondition): # do i make forest like a tile or an overlay feature
+        boomerMap = self.tileMap.copy()
+
+        for y in range(1, self.tilesHeight-1): # run cellular automata
+            for x in range(1, self.tilesWidth-1):
+                grassSumTop = self.checkGrass(boomerMap[y-1][x-1][0]) + self.checkGrass(boomerMap[y-1][x][0]) + self.checkGrass(boomerMap[y-1][x+1][0])
+                grassSumLR = self.checkGrass(boomerMap[y][x-1][0]) + self.checkGrass(boomerMap[y][x+1][0])
+                grassSumBottom = self.checkGrass(boomerMap[y+1][x-1][0]) + self.checkGrass(boomerMap[y+1][x][0]) + self.checkGrass(boomerMap[y+1][x+1][0])
+
+                forSumTop = self.checkForest(boomerMap[y-1][x-1][0]) + self.checkForest(boomerMap[y-1][x][0]) + self.checkForest(boomerMap[y-1][x+1][0])
+                forSumLR = self.checkForest(boomerMap[y][x-1][0]) + self.checkForest(boomerMap[y][x+1][0])
+                forSumBottom = self.checkForest(boomerMap[y+1][x-1][0]) + self.checkForest(boomerMap[y+1][x][0]) + self.checkForest(boomerMap[y+1][x+1][0])
+
+
+                grassSum = grassSumBottom + grassSumLR + grassSumTop + forSumBottom + forSumLR + forSumTop
+
+                if grassSum>=treeCondition and boomerMap[y][x][0] == 1:
+                    self.tileMap[y][x] = [3]
+
+            time.sleep(0.01)
+            self.processVisuals()
+
+        boomerMap = self.tileMap.copy()
+
+        for y in range(1, self.tilesHeight-1): # run cellular automata
+            for x in range(1, self.tilesWidth-1):
+                grassTop = self.checkGrass(boomerMap[y-1][x-1][0]) + self.checkGrass(boomerMap[y-1][x][0]) + self.checkGrass(boomerMap[y-1][x+1][0])
+                grassLR = self.checkGrass(boomerMap[y][x-1][0]) + self.checkGrass(boomerMap[y][x+1][0])
+                grassBottom = self.checkGrass(boomerMap[y+1][x-1][0]) + self.checkGrass(boomerMap[y+1][x][0]) + self.checkGrass(boomerMap[y+1][x+1][0])
+
+                if grassTop + grassLR + grassBottom > 3 and random.random()>0.5:
+                    self.tileMap[y][x] = [1]
+
+
+        time.sleep(0.5)
+
+        self.processVisuals()
+
+    def cleanOcean(self, runs, oceanThreshold = 5): # if not next to grass tile, standards are higher???
+        # duplicate tileMap values to new 2d list
+        # cellular automata off the copied list to the tileMap
+        # only do this once here, multiple iterations will be handled in main <- subject to change
+
+        counter = runs
+
+        while counter>0:
+
+            boomerMap = self.tileMap.copy()
+
+            for y in range(1, self.tilesHeight-1): # run cellular automata
+                for x in range(1, self.tilesWidth-1):
+                    if boomerMap[y][x][0] == 2:
+                        # split up so it's easier to read code
+                        oceanSumTop = self.checkOcean(boomerMap[y-1][x-1][0]) + self.checkOcean(boomerMap[y-1][x][0]) + self.checkOcean(boomerMap[y-1][x+1][0])
+                        oceanSumLR = self.checkOcean(boomerMap[y][x-1][0]) + self.checkOcean(boomerMap[y][x+1][0])
+                        oceanSumBottom = self.checkOcean(boomerMap[y+1][x-1][0]) + self.checkOcean(boomerMap[y+1][x][0]) + self.checkOcean(boomerMap[y+1][x+1][0])
+
+                        if oceanSumTop + oceanSumLR + oceanSumBottom>oceanThreshold:
+                            self.tileMap[y][x][0] = 0 
+
+            self.processVisuals()
+            counter-=1
+            time.sleep(0.5)
+
+    def heavyDutyOceanClean(self, runs, oceanThreshold = 2, grassThreshold = 1):
+
+        counter = runs
+
+        while counter>0:
+
+            boomerMap = self.tileMap.copy()
+            
+            for y in range(1, self.tilesHeight-1): # run cellular automata
+                for x in range(1, self.tilesWidth-1):
+                    grassSumTop = self.checkGrass(boomerMap[y-1][x-1][0]) + self.checkGrass(boomerMap[y-1][x][0]) + self.checkGrass(boomerMap[y-1][x+1][0])
+                    grassSumLR = self.checkGrass(boomerMap[y][x-1][0]) + self.checkGrass(boomerMap[y][x+1][0])
+                    grassSumBottom = self.checkGrass(boomerMap[y+1][x-1][0]) + self.checkGrass(boomerMap[y+1][x][0]) + self.checkGrass(boomerMap[y+1][x+1][0])
+
+                    grassSum = grassSumBottom + grassSumLR + grassSumTop
+                    
+                    oceanSumTop = self.checkOcean(boomerMap[y-1][x-1][0]) + self.checkOcean(boomerMap[y-1][x][0]) + self.checkOcean(boomerMap[y-1][x+1][0])
+                    oceanSumLR = self.checkOcean(boomerMap[y][x-1][0]) + self.checkOcean(boomerMap[y][x+1][0])
+                    oceanSumBottom = self.checkOcean(boomerMap[y+1][x-1][0]) + self.checkOcean(boomerMap[y+1][x][0]) + self.checkOcean(boomerMap[y+1][x+1][0])
+
+                    oceanSum = oceanSumBottom + oceanSumLR + oceanSumTop
+
+                    if grassSum<grassThreshold and oceanSum>oceanThreshold: # if at least 1 grass
+
+                        self.tileMap[y][x][0] = 0 
+
+            self.processVisuals()
+            counter-=1
+            time.sleep(0.5)
+
+    def cleanGrass(self, runs, grassThreshold = 4):
+        counter = runs
+
+        while counter>0:
+
+            boomerMap = self.tileMap.copy()
+
+            for y in range(1, self.tilesHeight-1): # run cellular automata
+                for x in range(1, self.tilesWidth-1):
+
+                    if boomerMap[y][x][0] == 2: # if the tile is sand
+                        # split up so it's easier to read code
+                        oceanSumTop = self.checkGrass(boomerMap[y-1][x-1][0]) + self.checkGrass(boomerMap[y-1][x][0]) + self.checkGrass(boomerMap[y-1][x+1][0])
+                        oceanSumLR = self.checkGrass(boomerMap[y][x-1][0]) + self.checkGrass(boomerMap[y][x+1][0])
+                        oceanSumBottom = self.checkGrass(boomerMap[y+1][x-1][0]) + self.checkGrass(boomerMap[y+1][x][0]) + self.checkGrass(boomerMap[y+1][x+1][0])
+
+                        if oceanSumTop + oceanSumLR + oceanSumBottom>grassThreshold:
+                            self.tileMap[y][x][0] = 1 
+
+            self.processVisuals()
+            counter-=1
+            time.sleep(0.5)
+
+    def checkOcean(self, num):
+        if num==0:
+            return 1
+        else:
+            return 0
+        
+    def checkGrass(self, num):
+        if num==1: # need to change this later
+            return 1
+        else:
+            return 0
+        
+    def checkForest(self,num):
+        if num==3:
+            return 1
+        else:
+            return 0
 
     def oceanBorder(self): # creates border of ocean
         for x in range(self.tilesWidth): # top
@@ -44,6 +180,12 @@ class WaFuCo:
         for y in range(distance, self.tilesHeight-distance):
             for x in range(distance, self.tilesWidth-distance):
                 self.tileMap[y][x] = [1]
+
+    def grassVomit(self, count: int, border: int): # puts random grass in places
+        for i in range(count):
+            xLoc = random.randint(border, self.tilesWidth-border-1)
+            yLoc = random.randint(border, self.tilesHeight-border-1)
+            self.tileMap[yLoc][xLoc] = [1]
 
     def prunePossibilities(self):
         for y in range(1, self.tilesHeight-1): # just ignoring margin stuff for now
@@ -95,6 +237,8 @@ class WaFuCo:
             for col in range(self.tilesHeight):
                 if len(self.tileMap[col][row]) == 1:
                     self.placeTile(row, col, self.tileMap[col][row][0])
+                elif len(self.tileMap[col][row]) == 2:
+                    self.placeTile(row, col, -2)
                 else:
                     self.placeTile(row, col, -1)
         pygame.display.flip()
@@ -115,8 +259,12 @@ class WaFuCo:
             self.screen.blit(self.tiles.get_tile(1,0), (x*self.cellWidth, y*self.cellHeight))
         elif tile==2: # sand
             self.screen.blit(self.tiles.get_tile(2,0), (x*self.cellWidth, y*self.cellHeight))
-        else:
+        elif tile==3: # forest
+            self.screen.blit(self.tiles.get_tile(3,0), (x*self.cellWidth, y*self.cellHeight))
+        elif tile == -1: # 3 possibilities
             self.screen.blit(self.tiles.get_tile(4,0), (x*self.cellWidth, y*self.cellHeight))
+        elif tile == -2: # 2 possibilities
+            self.screen.blit(self.tiles.get_tile(4,1), (x*self.cellWidth, y*self.cellHeight))
 
     def handle_events(self):
         for event in pygame.event.get():

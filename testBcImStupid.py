@@ -1,7 +1,10 @@
-poopy = [[-1 for i in range(4)] for j in range(6)]
 
-poopy[1][2] = 8
 
-print(poopy)
+poopy = [[[0],[0],[0]],[[0],[1],[0]],[[0],[0],[0]]]
+
+for i in poopy:
+    print(i)
+
+
 
 
