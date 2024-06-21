@@ -29,7 +29,7 @@ class WaFuCo:
         self.tileMap = [[[0, 1, 2] for i in range(tilesWidth)] for j in range(tilesHeight)]
 
     def spawnForestsInst(self, treeCondition): # do i make forest like a tile or an overlay feature
-        boomerMap = self.tileMap.copy()
+        boomerMap = self.tileMap.copy() # for some reason this tends to not do anything at larger sizes??
 
         for y in range(1, self.tilesHeight-1): # run cellular automata
             for x in range(1, self.tilesWidth-1):
@@ -44,12 +44,19 @@ class WaFuCo:
 
                 grassSum = grassSumBottom + grassSumLR + grassSumTop + forSumBottom + forSumLR + forSumTop
 
-                if grassSum>=treeCondition and boomerMap[y][x][0] == 1:
+                if grassSum>=treeCondition and boomerMap[y][x][0] == 1 and random.random()>0.1:
                     self.tileMap[y][x] = [3]
 
-            time.sleep(0.01)
             self.processVisuals()
+            self.handle_events()
 
+
+
+        time.sleep(0.5)
+
+        self.processVisuals()
+
+    def cleanForest(self):
         boomerMap = self.tileMap.copy()
 
         for y in range(1, self.tilesHeight-1): # run cellular automata
@@ -58,13 +65,24 @@ class WaFuCo:
                 grassLR = self.checkGrass(boomerMap[y][x-1][0]) + self.checkGrass(boomerMap[y][x+1][0])
                 grassBottom = self.checkGrass(boomerMap[y+1][x-1][0]) + self.checkGrass(boomerMap[y+1][x][0]) + self.checkGrass(boomerMap[y+1][x+1][0])
 
-                if grassTop + grassLR + grassBottom > 3 and random.random()>0.5:
+                if grassTop + grassLR + grassBottom > 2 and random.random()>0.5 and self.tileMap[y][x] == [3]:
+                    self.tileMap[y][x] = [1]
+
+        self.processVisuals()
+        time.sleep(0.25)
+
+        for y in range(1, self.tilesHeight-1): # run cellular automata
+            for x in range(1, self.tilesWidth-1):
+                grassTop = self.checkGrass(boomerMap[y-1][x-1][0]) + self.checkGrass(boomerMap[y-1][x][0]) + self.checkGrass(boomerMap[y-1][x+1][0])
+                grassLR = self.checkGrass(boomerMap[y][x-1][0]) + self.checkGrass(boomerMap[y][x+1][0])
+                grassBottom = self.checkGrass(boomerMap[y+1][x-1][0]) + self.checkGrass(boomerMap[y+1][x][0]) + self.checkGrass(boomerMap[y+1][x+1][0])
+
+                if grassTop + grassLR + grassBottom > 6 and self.tileMap[y][x] == [3]:
                     self.tileMap[y][x] = [1]
 
 
-        time.sleep(0.5)
-
         self.processVisuals()
+        self.handle_events()
 
     def cleanOcean(self, runs, oceanThreshold = 5): # if not next to grass tile, standards are higher???
         # duplicate tileMap values to new 2d list
@@ -157,7 +175,7 @@ class WaFuCo:
         else:
             return 0
         
-    def checkForest(self,num):
+    def checkForest(self, num):
         if num==3:
             return 1
         else:

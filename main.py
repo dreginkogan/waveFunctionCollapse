@@ -9,10 +9,10 @@ import time
 # 3 territory???
 
 if __name__ == '__main__':
-    waFuCo = WaFuCo(128, 128, 6 ,6, True)
+    waFuCo = WaFuCo(60, 60, 6 ,6, True)
 
     waFuCo.oceanBorder()
-    waFuCo.grassVomit(5, 2)
+    # waFuCo.grassVomit(5, 5)
 
 
     numClean = 8
@@ -36,7 +36,11 @@ if __name__ == '__main__':
     waFuCo.cleanGrass(4)
     print("let it grow let it grow")
 
-    waFuCo.spawnForestsInst(7)
+    waFuCo.spawnForestsInst(7) # why does this often just not fucking work
+    print("arbarojn kreskita!") # the trees are being placed, visuals are just not processing
+
+    waFuCo.cleanForest()
+    time.sleep(0.25)
 
     while True:
         waFuCo.handle_events()
