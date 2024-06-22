@@ -9,10 +9,10 @@ import time
 # 3 territory???
 
 if __name__ == '__main__':
-    waFuCo = WaFuCo(48, 48, 6 ,6, True)
+    waFuCo = WaFuCo(64, 64, 6 ,6, True)
 
     waFuCo.oceanBorder()
-    waFuCo.grassVomit(3, 5)
+    # waFuCo.grassVomit(30, 5)
 
 
     numClean = 8
@@ -41,6 +41,10 @@ if __name__ == '__main__':
 
     waFuCo.cleanForest()
     time.sleep(0.25)
+
+    waFuCo.spawnVillage(30, 2, 2)
+
+    waFuCo.SpawnPier()
 
     while True:
         waFuCo.handle_events()

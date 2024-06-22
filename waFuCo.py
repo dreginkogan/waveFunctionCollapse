@@ -24,9 +24,75 @@ class WaFuCo:
         self.bg_color = pygame.Color('black')
 
         # use tile sheet
-        self.tiles =  Tilesheet('tiles.png', cellWidth, cellHeight, 2, 5)
+        self.tiles =  Tilesheet('tiles.png', cellWidth, cellHeight, 4, 7)
 
         self.tileMap = [[[0, 1, 2] for i in range(tilesWidth)] for j in range(tilesHeight)]
+
+
+    def SpawnPier(self):
+        for y in range(1, self.tilesHeight-1):
+            for x in range(1, self.tilesWidth-1):
+
+                # village to the right
+                if self.tileMap[y][x+1][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y][x-1][0] == 0:
+                    self.tileMap[y][x][0] = 11
+
+                # to the left
+                if self.tileMap[y][x-1][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y][x+1][0] == 0:
+                    self.tileMap[y][x][0] = 13
+
+                #up
+                if self.tileMap[y-1][x][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y+1][x][0] == 0:
+                    self.tileMap[y][x][0] = 14
+
+                #down 
+                if self.tileMap[y+1][x][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y-1][x][0] == 0:
+                    self.tileMap[y][x][0] = 12
+
+                self.processVisuals()
+                self.handle_events()
+
+
+
+    def testTileMap(self):
+        self.tileMap = [[[0],[0],[0],[0],[0]], [[0],[2],[2],[2],[0]], [[0],[2],[3],[2],[0]], [[0],[2],[2],[2],[0]], [[0],[0],[0],[0],[0]]]
+
+    def spawnVillage(self, num, treeDist = 1, waterDist = 2):
+        eligible = [] # elligible spots for village spawning
+        count = num
+
+        for y in range(max(treeDist, waterDist), self.tilesWidth- max(treeDist, waterDist) - 1):
+            for x in range(max(treeDist, waterDist), self.tilesHeight - max(treeDist, waterDist) - 1):
+
+                if self.tileMap[y][x][0] == 1: #only allow grass tiles to be eligible
+                    
+                    numTrees = 0
+                    numWater = 0
+
+                    for j in range(y-treeDist, y+treeDist+1):
+                        for i in range(x-treeDist, x+treeDist+1):
+                            numTrees+=self.checkForest(self.tileMap[j][i][0])
+
+                    for j in range(y-waterDist, y+waterDist+1):
+                        for i in range(x-waterDist, x+waterDist+1):
+                            numWater+=self.checkOcean(self.tileMap[j][i][0])
+                            
+                    if numTrees>2 and numWater>2:
+                        eligible.insert(0,(x,y))
+                        print((x,y))
+
+        for i in range(count):
+            if len(eligible)<2:
+                break
+            rand = random.randint(0, len(eligible)-1)
+            p, q = eligible[rand]
+            eligible.remove((p,q))
+            self.tileMap[q][p][0]=5
+            self.processVisuals()
+            self.handle_events()
+            count-=1
+
+
 
     def spawnForestsInst(self, treeCondition): # do i make forest like a tile or an overlay feature
         boomerMap = self.tileMap.copy() # for some reason this tends to not do anything at larger sizes??
@@ -279,6 +345,16 @@ class WaFuCo:
             self.screen.blit(self.tiles.get_tile(2,0), (x*self.cellWidth, y*self.cellHeight))
         elif tile==3: # forest
             self.screen.blit(self.tiles.get_tile(3,0), (x*self.cellWidth, y*self.cellHeight))
+        elif tile==5: # vilage
+            self.screen.blit(self.tiles.get_tile(5,0), (x*self.cellWidth, y*self.cellHeight))
+        elif tile==11: # pier
+            self.screen.blit(self.tiles.get_tile(6,0), (x*self.cellWidth, y*self.cellHeight))
+        elif tile==12: # pier
+            self.screen.blit(self.tiles.get_tile(6,1), (x*self.cellWidth, y*self.cellHeight))
+        elif tile==13: # pier
+            self.screen.blit(self.tiles.get_tile(6,2), (x*self.cellWidth, y*self.cellHeight))
+        elif tile==14: # pier
+            self.screen.blit(self.tiles.get_tile(6,3), (x*self.cellWidth, y*self.cellHeight))
         elif tile == -1: # 3 possibilities
             self.screen.blit(self.tiles.get_tile(4,0), (x*self.cellWidth, y*self.cellHeight))
         elif tile == -2: # 2 possibilities
