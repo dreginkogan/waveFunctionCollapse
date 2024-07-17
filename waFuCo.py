@@ -29,25 +29,27 @@ class WaFuCo:
         self.tileMap = [[[0, 1, 2] for i in range(tilesWidth)] for j in range(tilesHeight)]
 
 
-    def SpawnPier(self):
+    def spawnPier(self):
         for y in range(1, self.tilesHeight-1):
             for x in range(1, self.tilesWidth-1):
 
-                # village to the right
-                if self.tileMap[y][x+1][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y][x-1][0] == 0:
-                    self.tileMap[y][x][0] = 11
+                if self.tileMap[y][x][0]==5:
 
-                # to the left
-                if self.tileMap[y][x-1][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y][x+1][0] == 0:
-                    self.tileMap[y][x][0] = 13
+                    # left facing pier
+                    if self.tileMap[y][x-2][0] == 0 and self.tileMap[y][x-1][0] == 0:
+                        self.tileMap[y][x-1][0] = 11
 
-                #up
-                if self.tileMap[y-1][x][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y+1][x][0] == 0:
-                    self.tileMap[y][x][0] = 14
+                    # right facing pier
+                    if self.tileMap[y][x+1][0] == 0 and self.tileMap[y][x+2][0] == 0:
+                        self.tileMap[y][x+1][0] = 13
 
-                #down 
-                if self.tileMap[y+1][x][0] == 5 and self.tileMap[y][x][0] == 0 and self.tileMap[y-1][x][0] == 0:
-                    self.tileMap[y][x][0] = 12
+                    # down facing pier
+                    if self.tileMap[y+1][x][0] == 0 and self.tileMap[y+2][x][0] == 0:
+                        self.tileMap[y+1][x][0] = 14
+
+                    # north facing pier
+                    if self.tileMap[y-1][x][0] == 0 and self.tileMap[y-2][x][0] == 0:
+                        self.tileMap[y-1][x][0] = 12
 
                 self.processVisuals()
                 self.handle_events()

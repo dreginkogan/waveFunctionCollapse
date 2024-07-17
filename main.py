@@ -42,9 +42,9 @@ if __name__ == '__main__':
     waFuCo.cleanForest()
     time.sleep(0.25)
 
-    waFuCo.spawnVillage(30, 2, 2)
+    waFuCo.spawnVillage(40, 2, 2)
 
-    waFuCo.SpawnPier()
+    waFuCo.spawnPier()
 
     while True:
         waFuCo.handle_events()
