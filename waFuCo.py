@@ -60,6 +60,7 @@ class WaFuCo:
         self.tileMap = [[[0],[0],[0],[0],[0]], [[0],[2],[2],[2],[0]], [[0],[2],[3],[2],[0]], [[0],[2],[2],[2],[0]], [[0],[0],[0],[0],[0]]]
 
     def spawnVillage(self, num, treeDist = 1, waterDist = 2):
+
         eligible = [] # elligible spots for village spawning
         count = num
 
@@ -81,7 +82,7 @@ class WaFuCo:
                             
                     if numTrees>2 and numWater>2:
                         eligible.insert(0,(x,y))
-                        print((x,y))
+                        # print((x,y))
 
         for i in range(count):
             if len(eligible)<2:
